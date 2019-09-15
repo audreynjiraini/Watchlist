@@ -7,7 +7,7 @@ from ..import db
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from ..email import mail_message
 
-@auth.route('/login', methods=["GET", "POST"]) # login view function that renders a template file
+@auth.route('/login', methods=['GET', 'POST']) # login view function that renders a template file
 def login():
     login_form = LoginForm()
     if login_form.validate_on_submit():
@@ -24,18 +24,17 @@ def login():
 
 
 
-
+  
 @auth.route('/logout')
 @login_required
 def logout():
     logout_user()
-    flash('You have been successfully logged out')
+    # flash('You have been successfully logged out')
     return redirect(url_for('main.index'))  
 
 
-  
 
-@auth.route('/register', methods = ["GET", "POST"])
+@auth.route('/register', methods = ['GET', 'POST'])
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
@@ -48,3 +47,6 @@ def register():
         return redirect(url_for('auth.login'))
         title = "New Account"
     return render_template('auth/register.html', registration_form = form)
+
+
+

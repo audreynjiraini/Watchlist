@@ -6,10 +6,32 @@ api_key = None
 # Getting the movie base url
 base_url = None
 
+
 def configure_request(app):
     global api_key,base_url
     api_key = app.config['MOVIE_API_KEY']
     base_url = app.config['MOVIE_API_BASE_URL']
+
+
+def get_movies(category):
+    '''
+    Function that gets the json response to our url request
+    '''
+    get_movies_url = base_url.format(category,api_key)
+
+    with urllib.request.urlopen(get_movies_url) as url:
+        get_movies_data = url.read()
+        get_movies_response = json.loads(get_movies_data)
+
+        movie_results = None
+
+        if get_movies_response['results']:
+            movie_results_list = get_movies_response['results']
+            movie_results = process_results(movie_results_list)
+
+
+    return movie_results
+
 
 def get_movie(id):
     get_movie_details_url = base_url.format(id,api_key)
@@ -31,24 +53,21 @@ def get_movie(id):
 
     return movie_object
 
-def get_movies(category):
-    '''
-    Function that gets the json response to our url request
-    '''
-    get_movies_url = base_url.format(category,api_key)
 
-    with urllib.request.urlopen(get_movies_url) as url:
-        get_movies_data = url.read()
-        get_movies_response = json.loads(get_movies_data)
+def search_movie(movie_name):
+    search_movie_url = 'https://api.themoviedb.org/3/search/movie?api_key={}&query={}'.format(api_key,movie_name)
+    with urllib.request.urlopen(search_movie_url) as url:
+        search_movie_data = url.read()
+        search_movie_response = json.loads(search_movie_data)
 
-        movie_results = None
+        search_movie_results = None
 
-        if get_movies_response['results']:
-            movie_results_list = get_movies_response['results']
-            movie_results = process_results(movie_results_list)
+        if search_movie_response['results']:
+            search_movie_list = search_movie_response['results']
+            search_movie_results = process_results(search_movie_list)
 
 
-    return movie_results
+    return search_movie_results
 
 
 def process_results(movie_list):
@@ -75,19 +94,3 @@ def process_results(movie_list):
             movie_results.append(movie_object)
 
     return movie_results
-
-
-def search_movie(movie_name):
-    search_movie_url = 'https://api.themoviedb.org/3/search/movie?api_key={}&query={}'.format(api_key,movie_name)
-    with urllib.request.urlopen(search_movie_url) as url:
-        search_movie_data = url.read()
-        search_movie_response = json.loads(search_movie_data)
-
-        search_movie_results = None
-
-        if search_movie_response['results']:
-            search_movie_list = search_movie_response['results']
-            search_movie_results = process_results(search_movie_list)
-
-
-    return search_movie_results

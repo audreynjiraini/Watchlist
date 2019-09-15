@@ -2,6 +2,7 @@ from . import db
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import UserMixin
 from . import login_manager
+from datetime import datetime
 
 
 @login_manager.user_loader # modifies the load_userfunction by passing in a user_id to the function that queries the database and gets a User with that ID.
@@ -25,46 +26,61 @@ class Movie:
 
 
 
-class Review:
-
-    all_reviews = []
-
-    def __init__(self,movie_id,title,imageurl,review):
-        self.movie_id = movie_id
-        self.title = title
-        self.imageurl = imageurl
-        self.review = review
-
-
+class Review(db.Model):
+    __tablename__ = 'reviews'
+    
+    id = db.Column(db.Integer, primary_key = True)
+    movie_id = db.Column(db.Integer)
+    movie_title = db.Column(db.String)
+    image_path = db.Column(db.String)
+    movie_review = db.Column(db.String)
+    posted = db.Column(db.Time, default = datetime.utcnow())
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    
+    
     def save_review(self):
-        Review.all_reviews.append(self)
-
-
+        db.session.add(self)
+        db.session.commit()
+        
+        
     @classmethod
-    def clear_reviews(cls):
-        Review.all_reviews.clear()
-
-    @classmethod
-    def get_reviews(cls,id):
-
-        response = []
-
-        for review in cls.all_reviews:
-            if review.movie_id == id:
-                response.append(review)
-
-        return response
+    def get_reviews(cls, id):
+        reviews = Review.query.filter_by(movie_id = id).all()
+        return reviews
     
-    
-class PhotoProfile(db.Model):
-    __tablename__ = 'profile_photos'
+# class Review:
 
-    id = db.Column(db.Integer,primary_key = True)
-    pic_path = db.Column(db.String())
-    user_id = db.Column(db.Integer,db.ForeignKey("users.id"))
+#     all_reviews = []
+
+#     def __init__(self,movie_id,title,imageurl,review):
+#         self.movie_id = movie_id
+#         self.title = title
+#         self.imageurl = imageurl
+#         self.review = review
 
 
-  
+#     def save_review(self):
+#         Review.all_reviews.append(self)
+
+
+#     @classmethod
+#     def clear_reviews(cls):
+#         Review.all_reviews.clear()
+
+#     @classmethod
+#     def get_reviews(cls,id):
+
+#         response = []
+
+#         for review in cls.all_reviews:
+#             if review.movie_id == id:
+#                 response.append(review)
+
+#         return response
+ 
+ 
+ 
+ 
 class User(UserMixin,db.Model): # create User class and pass in db.Model as an argument to connect our class to our database and allow communication
     
     __tablename__ = 'users' # allows us to give the tables in our database proper names. if it's not used, SQLAlchemy will assume the tablename is the lowercase of the class name i.e user in this case
@@ -75,9 +91,11 @@ class User(UserMixin,db.Model): # create User class and pass in db.Model as an a
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     bio = db.Column(db.String(255))
     profile_pic_path = db.Column(db.String())
+    
     pass_secure = db.Column(db.String(255))
     password_hash = db.Column(db.String(255))
-    photos = db.relationship('PhotoProfile',backref = 'user',lazy = "dynamic")
+    reviews = db.relationship('Review', backref = 'user', lazy = "dynamic")
+    
     
     @property # decorator to create a write only class property, password.
     
